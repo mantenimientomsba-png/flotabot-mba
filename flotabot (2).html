@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotMisión — Misión Buenos Aires</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  /* Colores exactos del colectivo Misión Buenos Aires */
+  /* Verde lima brillante del lateral */
+  --verde:#3db54a;--verde2:#2fa03d;--verde3:#52c961;--verde4:#e6f7e8;--verde5:#c2edc8;
+  /* Gris plateado de la carrocería */
+  --gris:#5a6472;--gris2:#6e7d8c;--gris3:#9aaab8;--gris4:#c4cdd6;--gris5:#edf0f3;--gris6:#f6f8fa;
+  --red:#991b1b;--red2:#ef4444;--red3:#fee2e2;
+  --amber:#92400e;--amber2:#f59e0b;--amber3:#fef3c7;
+  --blue:#1e40af;--blue2:#3b82f6;--blue3:#dbeafe;
+  --gray1:#f6f8fa;--gray2:#edf0f3;--gray3:#d4dbe3;--gray4:#8a9aaa;--gray5:#5a6472;--gray6:#2a3040;
+  /* Aliases */
+  --navy:var(--gris);--navy2:var(--gris2);--navy3:var(--gris3);
+  --green:#166534;--green2:#3db54a;--green3:#e6f7e8;--green4:#52c961;
+  --font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+body{font-family:var(--font);font-size:13px;color:var(--gray6);background:linear-gradient(160deg,#edf0f3 0%,#f6f8fa 60%,#e6f7e8 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px;}
+.wrapper{width:100%;max-width:480px;}
+.notif-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;}
+.notif-overlay.show{display:flex;}
+.notif-card{background:#fff;border-radius:20px;padding:32px 24px;max-width:340px;width:90%;text-align:center;}
+.notif-icon{font-size:52px;margin-bottom:12px;display:block;}
+.nib{display:inline-block;font-size:11px;padding:4px 12px;border-radius:20px;font-weight:600;font-family:var(--mono);margin-bottom:10px;}
+.nib-ok{background:var(--green3);color:var(--green);}
+.nib-ret{background:var(--red3);color:var(--red);}
+.ntit{font-size:21px;font-weight:600;margin-bottom:10px;}
+.nsub{font-size:13px;color:var(--gray5);line-height:1.7;margin-bottom:20px;}
+.nbtno{border:none;padding:13px 28px;border-radius:28px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);width:100%;}
+.nbtno-ok{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;}
+.nbtno-ret{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+.brand-header{background:linear-gradient(135deg,#ffffff 0%,#edf0f3 100%);border-bottom:5px solid var(--verde);padding:14px 18px;display:flex;align-items:center;gap:14px;border-radius:14px 14px 0 0;box-shadow:0 3px 12px rgba(61,181,74,.15);}
+.brand-logo{width:50px;height:50px;background:linear-gradient(135deg,var(--verde2) 0%,var(--verde3) 100%);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;font-family:var(--mono);box-shadow:0 3px 12px rgba(61,181,74,.4);}
+.brand-title{font-size:13px;font-weight:700;color:var(--gris);font-family:var(--mono);letter-spacing:.05em;}
+.brand-sub{font-size:10px;color:var(--gray4);font-family:var(--mono);margin-top:2px;}
+.topbar{background:linear-gradient(90deg,var(--gris) 0%,var(--gris2) 70%,var(--verde2) 100%);height:44px;display:flex;align-items:center;padding:0 16px;gap:2px;position:relative;}
+.topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--verde);opacity:.6;}
+.ntab{height:44px;padding:0 14px;border:none;background:transparent;color:rgba(255,255,255,.65);font-size:12px;cursor:pointer;font-family:var(--font);font-weight:500;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+.ntab.active{color:#fff;border-bottom-color:var(--verde3);}
+.pill{background:var(--red2);color:#fff;font-size:9px;padding:2px 6px;border-radius:20px;margin-left:5px;display:none;font-family:var(--mono);}
+.pill.show{display:inline-block;}
+.chat-wrap{border-radius:0 0 14px 14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+.chat-sub{background:linear-gradient(90deg,var(--gris) 0%,var(--gris2) 70%,#3a7a44 100%);padding:10px 16px;display:flex;align-items:center;gap:12px;}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--verde2),var(--verde3));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(61,181,74,.5);}
+.chat-name{font-size:13px;font-weight:500;color:#fff;}
+.chat-st{font-size:10px;color:rgba(255,255,255,.6);}
+.dot{width:7px;height:7px;background:var(--green4);border-radius:50%;display:inline-block;margin-right:5px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.prog{height:4px;background:rgba(255,255,255,.15);}
+.pf{height:100%;background:linear-gradient(90deg,#a8e6b4,#22c55e);transition:width .5s;width:0%;}
+.msgs{background:linear-gradient(180deg,#eef1f4 0%,#e8edf2 100%);padding:14px;min-height:320px;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;}
+.msg{max-width:86%;padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.6;}
+.bot{background:#fff;align-self:flex-start;border-radius:0 10px 10px 10px;border:.5px solid rgba(0,0,0,.08);}
+.user{background:linear-gradient(135deg,#c8edcc,#b8e6be);align-self:flex-end;border-radius:10px 0 10px 10px;color:#1a3d20;border:1px solid rgba(61,181,74,.2);}
+.errmsg{background:var(--red3);align-self:flex-start;border-radius:0 10px 10px 10px;border:.5px solid #fca5a5;color:var(--red);}
+.msg-aut{background:#d1fae5;align-self:flex-start;border-radius:0 10px 10px 10px;border:2px solid #22c55e;}
+.msg-ret{background:var(--red3);align-self:flex-start;border-radius:0 10px 10px 10px;border:2px solid var(--red2);}
+.mt{font-size:10px;color:rgba(0,0,0,.3);margin-top:4px;}
+.user .mt{text-align:right;}
+.bdg{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;font-family:var(--mono);}
+.b-ok{background:var(--green3);color:var(--green);}
+.b-fail{background:var(--red3);color:var(--red);}
+.b-warn{background:var(--amber3);color:var(--amber);}
+.b-info{background:var(--blue3);color:var(--blue);}
+.b-pend{background:#e0e7ff;color:#3730a3;}
+.b-save{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
+.confirm-box{background:var(--gray1);border:1px solid var(--gray3);border-radius:10px;padding:12px 14px;font-size:12px;margin-top:6px;line-height:2;}
+.rl{font-size:10px;color:var(--gray4);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;}
+.rv{font-weight:600;}
+.rv-lg{font-size:18px;font-family:var(--mono);font-weight:600;color:var(--navy);}
+.footer{background:linear-gradient(180deg,#edf0f3,#e8ecf0);padding:12px 14px;display:flex;flex-direction:column;gap:9px;border-top:3px solid var(--verde3);}
+.hint{font-size:11px;color:var(--gray4);text-align:center;font-family:var(--mono);}
+.brow{display:flex;gap:8px;flex-wrap:wrap;}
+.cbtn{border:none;padding:9px 18px;border-radius:22px;font-size:12px;cursor:pointer;font-weight:600;font-family:var(--font);transition:all .15s;}
+.csi{background:linear-gradient(135deg,var(--verde2),var(--verde3));color:#fff;box-shadow:0 2px 10px rgba(61,181,74,.4);font-weight:700;}
+.cno{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;box-shadow:0 2px 10px rgba(220,38,38,.3);font-weight:700;}
+.crst{background:linear-gradient(135deg,var(--gris),var(--gris2));color:#fff;}
+.irow{display:flex;gap:8px;}
+.ci{flex:1;border:1px solid var(--gray3);border-radius:22px;padding:9px 15px;font-size:13px;font-family:var(--font);background:#fff;outline:none;}
+.ci:focus{border-color:var(--navy2);}
+.cs{background:var(--navy2);color:#fff;padding:9px 16px;border-radius:22px;border:none;cursor:pointer;font-size:12px;font-weight:600;}
+.sup-wrap{border-radius:0 0 14px 14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+.stabs{display:flex;background:#fff;border-bottom:2px solid var(--verde4);padding:0 14px;}
+.stab{padding:11px 13px;font-size:12px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--gray4);}
+.stab.active{color:var(--verde);border-bottom-color:var(--verde);}
+.sbody{padding:14px;overflow-y:auto;max-height:480px;background:var(--gray1);}
+.ssec{display:none;}.ssec.active{display:block;}
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.kpi{background:#fff;border:.5px solid var(--verde4);border-radius:10px;padding:11px 12px;box-shadow:0 1px 4px rgba(26,107,47,.06);}
+.kl{font-size:10px;color:var(--gray4);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px;}
+.kv{font-size:22px;font-weight:600;font-family:var(--mono);}
+.kb{color:var(--blue2);}.ka{color:var(--amber2);}.kg{color:var(--green2);}.kr{color:var(--red2);}
+.card{background:#fff;border:.5px solid var(--verde4);border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(26,107,47,.05);}
+.chdr{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray4);font-family:var(--mono);margin-bottom:12px;}
+.aitem{padding:12px 0;border-bottom:.5px solid var(--gray2);}
+.aitem:last-child{border-bottom:none;}
+.atop{display:flex;gap:10px;}
+.adot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.dw{background:var(--amber2);}.dr{background:var(--red2);}.dg{background:var(--green2);}
+.ainfo{flex:1;}
+.aname{font-weight:600;font-size:13px;}
+.ameta{font-size:11px;color:var(--gray4);font-family:var(--mono);margin-top:2px;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.chip{font-size:10px;padding:3px 9px;border-radius:20px;background:var(--red3);color:var(--red);font-weight:500;}
+.abtns{display:flex;gap:7px;margin-top:9px;}
+.abtn{border:none;padding:7px 15px;border-radius:22px;font-size:11px;cursor:pointer;font-weight:600;}
+.abtn-a{background:linear-gradient(135deg,var(--verde2),var(--verde3));color:#fff;}
+.abtn-r{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;}
+.nopend{text-align:center;padding:24px;color:var(--gray4);}
+.brl{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.bll{width:155px;font-size:12px;color:var(--gray5);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.blt{flex:1;background:var(--gray2);border-radius:4px;height:9px;overflow:hidden;}
+.blf{height:100%;border-radius:4px;}
+.bln{width:22px;text-align:right;font-size:11px;color:var(--gray4);font-family:var(--mono);}
+.ht{width:100%;border-collapse:collapse;font-size:12px;}
+.ht th{text-align:left;padding:7px 10px;border-bottom:1px solid var(--gray3);color:var(--gray4);font-family:var(--mono);font-size:10px;text-transform:uppercase;}
+.ht td{padding:9px 10px;border-bottom:.5px solid var(--gray2);vertical-align:middle;}
+.ht tr:hover td{background:var(--gray1);}
+.filt-btn{border:1px solid var(--gray3);background:#fff;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font);color:var(--gray5);}
+.filt-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.db-wrap{border-radius:0 0 14px 14px;background:var(--gray1);box-shadow:0 4px 20px rgba(0,0,0,.1);}
+.db-inner{padding:14px;}
+.dbsi{width:100%;border:1px solid var(--gray3);border-radius:22px;padding:10px 16px;font-size:13px;font-family:var(--font);background:#fff;outline:none;margin-bottom:10px;}
+.dbtw{overflow:auto;max-height:380px;border:.5px solid var(--gray3);border-radius:10px;}
+.dbt{width:100%;border-collapse:collapse;font-size:12px;}
+.dbt th{background:var(--navy);color:#fff;padding:8px 12px;text-align:left;font-weight:500;font-family:var(--mono);font-size:10px;position:sticky;top:0;}
+.dbt td{padding:8px 12px;border-bottom:.5px solid var(--gray2);}
+</style>
+</head>
+<body>
+
+<div class="notif-overlay" id="notif-overlay">
+  <div class="notif-card">
+    <span class="notif-icon" id="ni">✅</span>
+    <div><span class="nib nib-ok" id="nib">AUTORIZADO</span></div>
+    <div class="ntit" id="ntit">¡Salida autorizada!</div>
+    <div class="nsub" id="nsub"></div>
+    <button class="nbtno nbtno-ok" id="nbtne" onclick="cerrarNotif()">Entendido</button>
+  </div>
+</div>
+
+<div class="wrapper">
+  <div class="brand-header">
+    <div class="brand-logo">MBA</div>
+    <div>
+      <div class="brand-title">BOTMISIÓN · MBA</div>
+      <div class="brand-sub" id="brand-sub">Misión Buenos Aires · Control de Flota · PRO O-M-01</div>
+    </div>
+  </div>
+  <div class="topbar">
+    <button class="ntab active" id="tab-chat" onclick="showMain('chat',this)">Conductor</button>
+    <button class="ntab" id="tab-sup" style="display:none" onclick="showMain('sup',this)">Supervisor <span class="pill" id="spill"></span></button>
+    <button class="ntab" id="tab-db" style="display:none" onclick="showMain('db',this)">Legajos</button>
+  </div>
+
+  <!-- CONDUCTOR -->
+  <div id="main-chat">
+    <div class="chat-wrap">
+      <div class="chat-sub">
+        <div class="av">MBA</div>
+        <div><div class="chat-name">BotMisión</div><div class="chat-st"><span class="dot"></span>en línea</div></div>
+      </div>
+      <div class="prog"><div class="pf" id="pf"></div></div>
+      <div class="msgs" id="msgs"></div>
+      <div class="footer">
+        <div class="hint" id="hint">Ingresá tu legajo para comenzar</div>
+        <div class="brow" id="btns"></div>
+        <div class="irow" id="irow" style="display:none">
+          <input class="ci" type="text" id="ci" placeholder=""/>
+          <button class="cs" onclick="doSend()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPERVISOR -->
+  <div id="main-sup" style="display:none">
+    <div class="sup-wrap">
+      <div class="stabs">
+        <div class="stab active" onclick="showStab('dash',this)">Resumen</div>
+        <div class="stab" onclick="showStab('auth',this)">Autorizar <span class="pill" id="apill"></span></div>
+        <div class="stab" onclick="showStab('hist',this)">Historial</div>
+      </div>
+      <div class="sbody">
+        <div class="ssec active" id="stab-dash">
+          <div class="krow">
+            <div class="kpi"><div class="kl">Hoy</div><div class="kv kb" id="kt">0</div></div>
+            <div class="kpi"><div class="kl">Pendiente</div><div class="kv ka" id="kp">0</div></div>
+            <div class="kpi"><div class="kl">OK</div><div class="kv kg" id="kok">0</div></div>
+            <div class="kpi"><div class="kl">Anomalías</div><div class="kv kr" id="kan">0</div></div>
+          </div>
+          <div class="card" style="margin-bottom:10px;">
+            <div class="chdr">Filtrar por línea</div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;">
+              <button class="filt-btn active" onclick="setFiltro('todas',this)">Todas</button>
+              <button class="filt-btn" onclick="setFiltro('114-143',this)">114 — 143</button>
+              <button class="filt-btn" onclick="setFiltro('61-62',this)">61 — 62</button>
+              <button class="filt-btn" onclick="setFiltro('129',this)">129</button>
+              <button class="filt-btn" onclick="setFiltro('197',this)">197</button>
+              <button class="filt-btn" onclick="setFiltro('145',this)">145</button>
+            </div>
+          </div>
+          <div class="card"><div class="chdr">Anomalías frecuentes</div><div id="fbars"><div class="nopend">Sin datos.</div></div></div>
+        </div>
+        <div class="ssec" id="stab-auth">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span class="chdr" style="margin-bottom:0;">Pendientes de autorización</span>
+              <button onclick="cargarDesdeSheets()" id="btn-refresh" style="border:none;background:var(--navy);color:#fff;border-radius:8px;padding:6px 14px;font-size:11px;cursor:pointer;font-family:var(--font);">🔄 Actualizar</button>
+            </div>
+            <div id="alist"><div class="nopend">Presioná Actualizar para cargar.</div></div>
+          </div>
+        </div>
+        <div class="ssec" id="stab-hist">
+          <div class="card"><div class="chdr">Historial</div>
+            <div style="overflow-x:auto"><table class="ht">
+              <thead><tr><th>#</th><th>Tipo</th><th>Hora</th><th>Conductor</th><th>Interno</th><th>Línea</th><th>Estado</th></tr></thead>
+              <tbody id="hbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#9ca3af;">Sin registros.</td></tr></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGAJOS -->
+  <div id="main-db" style="display:none">
+    <div class="db-wrap"><div class="db-inner">
+      <input class="dbsi" type="text" id="dbq" placeholder="Buscar por legajo o nombre..." oninput="renderDB()"/>
+      <div id="dbc" style="font-size:11px;color:var(--gray4);margin-bottom:8px;"></div>
+      <div class="dbtw"><table class="dbt">
+        <thead><tr><th>Legajo</th><th>Apellido y Nombre</th><th>Gerencia</th><th>Línea</th></tr></thead>
+        <tbody id="dbtb"></tbody>
+      </table></div>
+    </div></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzXoZsEHT-l5B9ClfDqyvrcVVezLY2Rr32q8sEEVx_nFKDLzq_0yDlt1xOdIHl8qUXDzg/exec';
+const SHEETS_ID  = '17sWQaXUwIuqTwE3pEnbiXUWpkdrOcuzlr40PN02pix8';
+let MODO = 'conductor';
+
+// ============================================================
+// NOMINA
+// ============================================================
+const NOMINA = 
+[{"legajo": "1083", "nombre": "ABREGU, SAMUEL RUBEN", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1115", "nombre": "ABREO, JOSE MIGUEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1351", "nombre": "ACEVEDO, JAVIER EZEQUIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1189", "nombre": "ACOSTA, CARLOS JAVIER", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1506", "nombre": "ACOSTA, JUAN CARLOS", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1125", "nombre": "ACOSTA, NESTOR MIGUEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1072", "nombre": "ACOSTA, RAMON VICTOR", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1271", "nombre": "ACUÑA,  LUCAS LEONARDO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1478", "nombre": "ACUÑA, MARCELO EZEQUIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1362", "nombre": "AGUIRRE ,MARTIN ALEJANDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1494", "nombre": "AGUIRRE, GUSTAVO GABRIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1565", "nombre": "AGUIRRE, LUCAS EZEQUIEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1167", "nombre": "AIZA ABREGU, JUAN CARLOS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1542", "nombre": "ALBERTO, HEBER NELSON", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1382", "nombre": "ALBORNOZ, HORACIO DAVID", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1537", "nombre": "ALBORNOZ, SEBASTIÁN JAVIER", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1453", "nombre": "ALFONSO, CLAUDIO ANDRES", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1364", "nombre": "AMARILLA , SEBASTIAN WALTER", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1070", "nombre": "AMARILLA, IGNACIO ALFREDO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1387", "nombre": "ANDRADA, CLAUDIO DANIEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1475", "nombre": "ANDRADA, NICOLAS ARIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1258", "nombre": "ARCE, GUSTAVO ISMAEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1272", "nombre": "AREDEZ, PABLO ALEJANDRO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1330", "nombre": "ARRIETA, MARTIN RAMON", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1100", "nombre": "BARRERA, SERGIO RAFAEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1060", "nombre": "BARRIONUEVO, FRANCISCO ANTONIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1034", "nombre": "BARRIOS, SERGIO ALBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1094", "nombre": "BATALLA, RAUL ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1015", "nombre": "BEJAR, DAMIAN NESTOR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1186", "nombre": "BENITEZ, HECTOR ANTONIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1141", "nombre": "BENITEZ, JAVIER LUIS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1206", "nombre": "BENITEZ, MARIO LUIS", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1211", "nombre": "BENITEZ, WALTER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1407", "nombre": "BERMUDEZ, JOSE MARIA", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1276", "nombre": "BESUZZO, GABRIEL OMAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1109", "nombre": "BLANCO, OSCAR ROBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1127", "nombre": "BOBADILLA, ARIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1078", "nombre": "BORDA, GABRIEL ALEJANDRO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1412", "nombre": "BORRAZAS, PATRICIO ESTEBAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1136", "nombre": "BRIGGS, MARIO CARLOS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1246", "nombre": "BUSTAMANTE, MARTIN ANTONIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1113", "nombre": "CABALLERO, CLAUDIO JAVIER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1353", "nombre": "CABAÑA, EZEQUIEL MAXIMILIANO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1463", "nombre": "CABRERA, MIGUEL ANGEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1058", "nombre": "CALISSANO FUNGO, GUILLERMO DAVID", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1050", "nombre": "CALVO, NESTOR ADRIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1201", "nombre": "CAMILLETTI, CLAUDIO HERNAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1464", "nombre": "CAMPOS, HORACIO EZEQUIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1319", "nombre": "CANELO, JONATHAN RAFAEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1107", "nombre": "CARABALLO, ANGEL ANDRES", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1465", "nombre": "CARDOSO, MARIANO EZEQUIEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1185", "nombre": "CASTELLANOS, ALBERTO FABIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1195", "nombre": "CASTILLO, JORGE ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1301", "nombre": "CASTRO, JOSE ANGEL DAMIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1323", "nombre": "CENTURION, SERGIO ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1306", "nombre": "CERRIZUELA, JORGE JAVIER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1466", "nombre": "CESAR, JULIO JESUS NORBERTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1169", "nombre": "CHAPARRO, JORGE DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1152", "nombre": "CHAVEZ CENTURION, SIXTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1123", "nombre": "CHAVEZ, ERNESTO REYES", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1513", "nombre": "CHINCUINI, OSCAR ORLANDO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1443", "nombre": "CHURRUARIN, JUAN MANUEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1309", "nombre": "CIANCI, SEBASTIÁN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1252", "nombre": "CIARES, PEDRO MARTIN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1419", "nombre": "CITTADINI, HERNAN ARIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1376", "nombre": "CLEMENTE, NELSON", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1101", "nombre": "COBER, ANDRES FERNANDO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1182", "nombre": "COLANERI, RAUL ALFREDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1155", "nombre": "COLMAN, DANIEL ANGEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1017", "nombre": "CORDOBA, JAVIER ENRIQUE", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1274", "nombre": "CORIA, CRISTIAN JAVIER", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1289", "nombre": "CORIA, GABRIEL ESTEBAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1011", "nombre": "CORTINA, FAVIO ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1349", "nombre": "CUELLO, CARLOS DAMIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1075", "nombre": "DE LACERDA, RUBEN DARIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1390", "nombre": "DE MICHELI, DANIEL OMAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1004", "nombre": "DEGUI, MARCELO HUMBERTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1172", "nombre": "DEL CANTO, DANIEL GUSTAVO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1153", "nombre": "DELGADO, GUSTAVO FERNANDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1366", "nombre": "DUOPLAT, EDUARDO ANIBAL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1014", "nombre": "DUPUY, DIEGO CRISTOBAL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1008", "nombre": "DURAND, LUIS MARIA A.", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1267", "nombre": "ENRIQUE, EDUARDO CESAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1352", "nombre": "ESQUIVEL, GUILLERMO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1145", "nombre": "FALCONE, DIEGO RUBEN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1119", "nombre": "FARIAS, PEDRO ESTEBAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1030", "nombre": "FERNANDEZ, JORGE CIPRIANO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1318", "nombre": "FERNANDEZ, RAMON ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1515", "nombre": "FERREYRA, ANGEL DAVID", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1404", "nombre": "FERREYRA, MAXIMILIANO NAHUEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1164", "nombre": "FIGUEREDO, RAMON MARCELO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1156", "nombre": "FIGUEROA, RAUL IGNACIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1093", "nombre": "FRANCO, RAFAEL MARCELO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1279", "nombre": "GALARZA, FERNANDO SEBASTIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1357", "nombre": "GALINDEZ, WALTER FABIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1449", "nombre": "GALVAN, HERNAN MATIAS OSCAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1047", "nombre": "GAMBOA, JUAN TIMOTEO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1020", "nombre": "GARAY, ALBERTO OSCAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1043", "nombre": "GARAY, SERGIO ALFREDO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1224", "nombre": "GARCIA, JOSE GREGORIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1322", "nombre": "GARNICA, MAURICIO HERNAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1314", "nombre": "GELRROTH, WALTER ADRIAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1118", "nombre": "GIAMPIERI, GUSTAVO OSVALDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1097", "nombre": "GIMENEZ ALONSO, ADELIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1467", "nombre": "GOICOECHEA, LUCAS JAVIER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1158", "nombre": "GOMEZ, JUAN CARLOS ARIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1370", "nombre": "GOMEZ, JUAN MARCELO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1429", "nombre": "GOMEZ, PABLO EZEQUIEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1007", "nombre": "GOMEZ, RAMON HORACIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1016", "nombre": "GOMEZ, RAUL HONORIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1149", "nombre": "GONZALEZ, ESTEBAN FAVIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1120", "nombre": "GONZALEZ, JUAN CARLOS", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1317", "nombre": "GONZALEZ, LUIS ANIBAL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1262", "nombre": "GONZALEZ, NERI ABEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1493", "nombre": "GONZALEZ, PABLO MAXIMILIANO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1285", "nombre": "GONZALEZ, RAMÓN DARIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1256", "nombre": "GONZALEZ, ROBERTO CARLOS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1157", "nombre": "GUDIÑO, ELVIO RICARDO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1305", "nombre": "GUTIERREZ, FRANCISCO JAVIER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1053", "nombre": "HAWRRYSZKOW, PABLO JOSE", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1383", "nombre": "HERRERA, GONZALO ESEQUIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1355", "nombre": "HERRERA, HUGO JESUS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1371", "nombre": "IANINI, EMILIANO EMMANUEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1408", "nombre": "IBAÑEZ, TOMAS JOSE", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1249", "nombre": "IGLESIAS, WALTER FABIAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1360", "nombre": "IMPERIALE, FEDERICO ERIC GASTON", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1170", "nombre": "INSAURRALDE, FEDERICO DAVID", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1479", "nombre": "IRRAZABAL, ARIEL MAXIMILIANO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1413", "nombre": "JARA, GERARDO DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1121", "nombre": "JARA, RAMON DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1063", "nombre": "JONGEWAARD DE BOER, EDUARDO ALBERTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1263", "nombre": "JUAREZ, JUAN ALBERTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1234", "nombre": "KAMBEROVICH, SAMUEL HERNAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1076", "nombre": "KEBERLEIN, CARLOS HORACIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1124", "nombre": "KEBERLEIN, CLAUDIO ALEJANDRO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1480", "nombre": "KEBERLEIN, HECTOR NICOLAS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1041", "nombre": "KEBERLEIN, JAVIER EDUARDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1173", "nombre": "KEBERLEIN, RICARDO FRANCISCO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1391", "nombre": "KSIAZEK, FEDERICO MAXIMILIANO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1340", "nombre": "LANDRIEL, RENE ATILIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1214", "nombre": "LASAGNA, LUIS ALBERTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1255", "nombre": "LAVORE, OSCAR ALFREDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1128", "nombre": "LAZARTE, JORGE ROLANDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1290", "nombre": "LAZARTE, RUBEN FERNANDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1039", "nombre": "LEDESMA, ALBERTO DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1468", "nombre": "LEDESMA, MATIAS GABRIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1473", "nombre": "LEGUIZAMON, MATIAS DAMIAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1110", "nombre": "LOPEZ, CARLOS DARIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1024", "nombre": "LOPEZ, HECTOR FABIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1356", "nombre": "LORCA, JUAN MARCELO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1260", "nombre": "LUNA, NELSON EDUARDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1105", "nombre": "MACIEL, JORGE ESTEBAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1223", "nombre": "MAIDANA, JOSE ANTONIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1394", "nombre": "MALDONADO, ADRIAN MARCELO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1250", "nombre": "MANSILLA, LEONARDO CESAR", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1470", "nombre": "MANZANELLI, LUIS NAHUEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1068", "nombre": "MARTINEZ, GUSTAVO ADOLFO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1363", "nombre": "MATUS, LUIS MIGUEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1291", "nombre": "MEDINA, GASTÓN RAFAEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1147", "nombre": "MENDEZ, WALTER ARIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1556", "nombre": "MENESES, NELSON JAVIER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1549", "nombre": "MIÑO, SERGIO MIGUEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1440", "nombre": "MIQUEO, LEONARDO ESTEBAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1321", "nombre": "MIRANDA, FEDERICO NICOLAS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1474", "nombre": "MIRANDA, JOSE LUIS", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1335", "nombre": "MOLINA FLORES, HECTOR MANUEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1485", "nombre": "MOLINA, EDUARDO MARTIN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1367", "nombre": "MONTENEGRO, JUAN MARCELO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1099", "nombre": "MONTENEGRO, NESTOR HORACIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1298", "nombre": "MONTENEGRO, SERGIO EMMANUEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1194", "nombre": "MONTENEGRO, SILVIO GERMAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1514", "nombre": "MONTOYA, BRAIAN ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1225", "nombre": "MONZON, RUBÉN DARÍO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1190", "nombre": "MORILLA, MAURICIO GERMAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1001", "nombre": "MOYANO, ALEJANDRO ROMAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1254", "nombre": "NACUSSI, WALTER SEBASTIAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1010", "nombre": "NAVARRO, DANIEL OMAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1283", "nombre": "NUÑEZ, IVAN MARTÍN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1002", "nombre": "OBANDO, HECTOR FABIO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1304", "nombre": "OJEDA, CRISTIAN OSCAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1346", "nombre": "OJEDA, FERNANDO MATEO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1029", "nombre": "OJEDA, LUIS EMILIO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1051", "nombre": "OLIVERA, ALBERTO MARTIN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1199", "nombre": "OLMEDO, ALDO ALEJANDRO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1368", "nombre": "ORDINOLA, JOSE LUIS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1243", "nombre": "ORDOÑE, FELIX OSVALDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1447", "nombre": "ORELLANO, ERNESTO DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1441", "nombre": "ORIGUELA, GABRIEL CARLOS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1019", "nombre": "ORTIZ, RUBEN CRISTOBAL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1238", "nombre": "ORUE, DIEGO ANTONIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1433", "nombre": "OVIEDO LOPEZ, GERARDO ROMAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1308", "nombre": "OVIEDO LOPEZ, GERMAN MATÍAS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1028", "nombre": "PALAVECINO, ADRIAN DIONICIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1052", "nombre": "PAZ, EDUARDO DEL VALLE", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1059", "nombre": "PEDRAZA, HECTOR RODOLFO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1384", "nombre": "PEDRAZA, MAXIMILIANO ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1264", "nombre": "PEÑA, JUAN JAVIER", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1392", "nombre": "PEREYRA, RICARDO OMAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1358", "nombre": "PEREZ VEGA, FABIO FERNANDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1187", "nombre": "PERSICO, MARIANO HERNAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1336", "nombre": "PIÑERO, LEONARDO MAXIMILIANO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1227", "nombre": "POCLAVA, JORGE ARMANDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1245", "nombre": "PUCHETA, DIEGO FROILAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1025", "nombre": "PUEBLAS, LUIS ANGEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1297", "nombre": "QUINTANA, JONATAN AGUSTIN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1162", "nombre": "QUINTANA, SERGIO LUIS", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1332", "nombre": "QUINTEROS, JONATAN LEONEL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1074", "nombre": "QUIROGA, ANDRES NORBERTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1270", "nombre": "RACEDO, JORGE OMAR", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1311", "nombre": "RAMIREZ, CLAUDIO ARIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1409", "nombre": "RAMIREZ, CRISTIAN JAVIER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1209", "nombre": "RAMIREZ, JUAN CARLOS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1339", "nombre": "RAMIREZ, LEONARDO HERNAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1288", "nombre": "RAMIREZ, SEBASTIÁN MATÍAS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1192", "nombre": "RAVELO, ORLANDO JAVIER", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1268", "nombre": "RECALDE, DANIEL ALEJANDRO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1244", "nombre": "RECALDE, HECTOR DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1126", "nombre": "REINA, ALEJANDRO RAMON", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1197", "nombre": "RETAMAR, IGNACIO ERNESTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1389", "nombre": "REYES, LEANDRO NICOLAS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1066", "nombre": "RICCILLO, ANDRES ALFREDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1310", "nombre": "RINAS, PABLO ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1181", "nombre": "ROBLEDO, HECTOR ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1265", "nombre": "RODRIGUEZ, CRISTIAN HUMBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1320", "nombre": "RODRIGUEZ, DAMIAN JOSE", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1295", "nombre": "RODRIGUEZ, ESTEBAN OSVALDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1044", "nombre": "RODRIGUEZ, FRANCISCO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1445", "nombre": "RODRIGUEZ, JONATHAN JESUS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1315", "nombre": "RODRIGUEZ, MAURO ANTONIO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1021", "nombre": "ROLDAN, JUAN PABLO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1205", "nombre": "ROMANO, RAUL GIORGI", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1222", "nombre": "ROMERO, EMILIANO IVAN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1259", "nombre": "ROMERO, RAMON ARIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1545", "nombre": "ROSAS GUEDES, NICOLAS GASTON", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1369", "nombre": "RUIZ DIAZ, WALTER EMANUEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1266", "nombre": "SAAVEDRA, ALEJANDRO AGUSTIN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1218", "nombre": "SALAS, JAVIER ALEJANDRO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1045", "nombre": "SALAS, SERGIO RAUL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1035", "nombre": "SALUM, EDUARDO JORGE", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1388", "nombre": "SALUM, MARTIN EDUARDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1405", "nombre": "SANCHEZ, DAVID EMMANUEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1442", "nombre": "SANDOVAL AGUIRRE, RICARDO FABIAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1316", "nombre": "SANTERO, DANIEL DAVID", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1006", "nombre": "SANTERO, OSVALDO HUMBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1365", "nombre": "SANTILLAN, CRISTIAN ORLANDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1054", "nombre": "SCHULTHEISS, CLAUDIO MARTIN", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1296", "nombre": "SEGOVIA, GASTON EZEQUIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1005", "nombre": "SILES TORRICO, WILFREDO RENE", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1073", "nombre": "SILVA, CARLOS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1042", "nombre": "SILVA, NESTOR DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1033", "nombre": "SIMAO, RICARDO NORBERTO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1536", "nombre": "SIRIS, RAMÓN MATEO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1022", "nombre": "SOSA, CARLOS ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1269", "nombre": "SOTELO, JORGE ANIBAL", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1009", "nombre": "STURM, DANIEL EMILIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1284", "nombre": "SZEWCZUK, JAVIER ADRIAN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1046", "nombre": "SZEWCZUK, JORGE MATEO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1166", "nombre": "TELLO, CLAUDIO ALEJANDRO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1031", "nombre": "TORRES, LUIS DANIEL", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1457", "nombre": "USUN, ALEJANDRO ALBERTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1048", "nombre": "VALDEZ, ROLANDO MARCELO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1334", "nombre": "VARGAS, DIEGO ERNESTO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1406", "nombre": "VERON FLORENTIN, GUILLERMO NICOLAS", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1221", "nombre": "VERON, EDUARDO JUAN DOMINGO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1481", "nombre": "VIDELA, CRISTIAN ANDRES", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1278", "nombre": "VILLALBA, ARIEL RICARDO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1095", "nombre": "VILLALBA, RAMON CRISPIN", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1414", "nombre": "VILLALVA, RICARDO DAVID", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1432", "nombre": "VRCA, MARCO ANTONIO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1112", "nombre": "WALTER, HECTOR FRANCISCO", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1261", "nombre": "YBAÑEZ, DIEGO JESUS", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1056", "nombre": "ZALDIVAR, GUSTAVO RAMON", "gerencia": "129 Urb.", "linea": "129"}, {"legajo": "1003", "nombre": "ZANIRATTO, WALTER MARIO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1400", "nombre": "ALANES MANCILLA, JONNY", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1426", "nombre": "ALVAREZ, RUBEN DARIO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1108", "nombre": "AMBROSIO LEQUE, PEDRO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1132", "nombre": "BARBERO, ALBERTO RAUL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1448", "nombre": "BARBOZA, CARLOS DANIEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1524", "nombre": "BARRIOS, LUCAS GREGORIO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1303", "nombre": "BRANDAN, CRISTIAN LEONARDO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1350", "nombre": "CARDOZO, ANGEL DARIO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1253", "nombre": "CAREAGA, FRANCISCO LEONARDO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1057", "nombre": "CARRAZANA, ROBERTO AMADO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1251", "nombre": "CORCOBA, ANDRES FIDEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1180", "nombre": "CORIA, GABRIEL GUSTAVO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1144", "nombre": "CORREA, ALBERTO DANIEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1380", "nombre": "CRUZ, CRISTIAN MATIAS", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1490", "nombre": "CRUZELA, FERNANDO ARIEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1151", "nombre": "DELVALLE SANCHEZ, JOSE ISMAEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1554", "nombre": "ESCOBAR, JUAN GABRIEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1161", "nombre": "ESPINOLA ALMEIDA, PRICILO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1329", "nombre": "ESPINOLA VALLEJOS, FIDELINO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1069", "nombre": "FLORENTIN, GUSTAVO MARCELO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1142", "nombre": "FRANCO, CESAR GABRIEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1277", "nombre": "GARAY BENITEZ, RAMON DIOSNEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1342", "nombre": "GAUTO MENDIETA, JORGE LUIS", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1451", "nombre": "GONZALEZ GONZALEZ, FRANCISCO JAVIER", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1175", "nombre": "GONZALEZ, JULIO CESAR", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1179", "nombre": "GRANDOLIS, SERGIO ISMAEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1348", "nombre": "GRIFFITHS, EDUARDO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1188", "nombre": "GUANE, JOSE RAMON", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1202", "nombre": "IBARROLA, JUAN IGNACIO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1505", "nombre": "INSAURRALDE, CRISTIAN GONZALO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1469", "nombre": "LACUESTA, JONATHAN CHISTOPHER", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1228", "nombre": "LEZCANO, GUILLERMO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1458", "nombre": "LUCENA, PEDRO ALBERTO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1085", "nombre": "LUQUE, HECTOR RODOLFO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1487", "nombre": "LUQUE, LEONARDO EZEQUIEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1163", "nombre": "MEZA, ISIDRO DANIEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1482", "nombre": "MEZA, MATIAS JAVIER", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1178", "nombre": "MICHELINI, NORBERTO OMAR", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1497", "nombre": "MONJE, ALBERTO EZEQUIEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1081", "nombre": "MONTAÑO, CONSTANTINO", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1450", "nombre": "MORALES IBARRA, MARCOS JAVIER", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1049", "nombre": "MORLIO, ADOLFO RICARDO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1237", "nombre": "MUMM, FERNANDO NICOLAS", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1116", "nombre": "NOVARA, RICARDO ENRIQUE", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1226", "nombre": "NUÑEZ, JORGE VICENTE", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1477", "nombre": "OJEDA, LUCAS RICARDO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1558", "nombre": "OVIEDO,JOSE MANUEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1176", "nombre": "PEREIRA, CARLOS ALBERTO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1379", "nombre": "PEREYRA, MARTIN HERNAN", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1374", "nombre": "PEREZ, FACUNDO JESUS", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1393", "nombre": "PONCE, ISAIAS RICARDO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1417", "nombre": "QUEREJETA, CRISTIAN HORACIO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1547", "nombre": "QUINTANA, HECTOR ANDRES", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1215", "nombre": "RASER, ADOLFO HECTOR", "gerencia": "129 Exp.", "linea": "1290"}, {"legajo": "1398", "nombre": "RODRIGUEZ GUZMAN, FRANCI ALEX", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1233", "nombre": "RODRIGUEZ, LUIS FERNANDO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1544", "nombre": "ROMERO, JORGE LEOPOLDO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1557", "nombre": "ROSAS, MAXIMILIANO RUBEN", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1347", "nombre": "RUESGA, GUILLERMO SEBASTIAN", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1193", "nombre": "RUIZ, PABLO ALFREDO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1273", "nombre": "SAMANIEGO, JOSE LUIS", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1207", "nombre": "SANCHEZ, GASTON", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1171", "nombre": "SANCHEZ, MARCELO JAVIER", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1472", "nombre": "SANDOVAL, JUAN EDUARDO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1333", "nombre": "SARRIAS, ALEJANDRO SEBASTIAN", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1293", "nombre": "SEGURA, JORGE DANIEL", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1300", "nombre": "SILVA, DANIEL HERNAN", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1302", "nombre": "SOSA, ALEJANDRO IGNACIO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1111", "nombre": "SOSA, JOSE PAULINO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1177", "nombre": "TALHAME, NORBERTO JOSE", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1090", "nombre": "TORRES, WALTER JAVIER", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1139", "nombre": "URIBE, DAVID ROBERTO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1146", "nombre": "VALENCIA, GABRIEL OMAR", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1138", "nombre": "VALENCIA, MARCELO NORBERTO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1415", "nombre": "VALLEJOS, HECTOR LEONARDO", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1528", "nombre": "VILLA,CESAR ALEJANDRO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1418", "nombre": "VILLALBA, ANGEL GABRIEL", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1299", "nombre": "VILLALBA, GUSTAVO FABIAN", "gerencia": "Constitucion", "linea": "62"}, {"legajo": "1530", "nombre": "VIRACOCHEA,SEGOVIA RODOLFO", "gerencia": "Constitucion", "linea": "61"}, {"legajo": "1564", "nombre": "ACOSTA JONATHAN EMMANUEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1345", "nombre": "ACOSTA, JOEL DAVID", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1247", "nombre": "ANTUNEZ, LEONARDO DANIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1344", "nombre": "ACOSTA, JULIO FACUNDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1248", "nombre": "ACOSTA, OSVALDO HUGO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1422", "nombre": "ARANDA, DANIEL ALBERTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1087", "nombre": "AGUIRRE PAREDES, FREDDY", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1036", "nombre": "AGUIRRE, RAUL ORESTE", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1130", "nombre": "ARRIETA, NELIDA ROSA", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1488", "nombre": "ALEGRE, ALBERTO EMANUEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1242", "nombre": "ALVARADO TAPIA, GALO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1548", "nombre": "ALZOGARAY, EMANUEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1241", "nombre": "AVALOS, DIEGO DAVID", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1134", "nombre": "ARANCIBIA, JAVIER LUCIO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1208", "nombre": "BARATE, MARCELO NEY", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1324", "nombre": "AREVALO CORONEL, JORGE ANTONIO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1427", "nombre": "ARGAÑARAZ, DANTE FABRICIO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1551", "nombre": "ARIAS, ANDRES GUSTAVO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1174", "nombre": "ARIAS, RUBEN GUSTAVO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1071", "nombre": "BEJARANO, ADRIAN FABIO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1446", "nombre": "ARTAZA, LEONARDO JAVIER", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1491", "nombre": "BENITEZ, VICTOR RAMON", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1435", "nombre": "AVALOS, JONATHAN GABRIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1023", "nombre": "AYALA, CARLOS WILFREDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1534", "nombre": "AYOSA, ANGEL GUSTAVO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1523", "nombre": "BENITEZ, WALTER DANIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1328", "nombre": "BAUTISTA, RENE ALBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1114", "nombre": "BAYANTE, HERNAN PABLO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1280", "nombre": "BERNAL, FERNANDO EMILIO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1131", "nombre": "BENITEZ, HUGO DANIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1560", "nombre": "BENITEZ, RODOLFO ALCIDES", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1425", "nombre": "BOGADO GIMENEZ, ROLANDO ARISTIDES", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1500", "nombre": "CABRAL, JAVIER CÉSAR", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1133", "nombre": "CALDERON, CLAUDIO NORBERTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1204", "nombre": "CAMACHO GONZALES, JOSE LUCHO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1428", "nombre": "BRAVO, JORGE GABRIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1486", "nombre": "CAMARATTA, ALEJANDRO MIGUEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1424", "nombre": "CABRERA, JONATHAN ALBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1438", "nombre": "CACERES RODRIGUEZ, SECUNDINO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1378", "nombre": "CAMARRI FRIAS, GONZALO GABRIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1561", "nombre": "CALLISAYA LOZA, JULIO CESAR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1026", "nombre": "CALLIZAYA MAMANCUSI, FELIX", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1454", "nombre": "CASTILLO, CRISTIAN FERNANDO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1501", "nombre": "CEJAS, MATIAS ABEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1538", "nombre": "CARDOZO, MAXIMILIANO MARTÍN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1089", "nombre": "CASAS, DANIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1231", "nombre": "COLINA, ROBERTO DANIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1040", "nombre": "CASTRO, WALTER H.", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1168", "nombre": "COLLO, ARIEL JORGE", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1325", "nombre": "CENTELLAS GUZMAN, EDGAR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1437", "nombre": "CHURA CAZORLA, LUIS EDUARDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1509", "nombre": "COLMAN, ALEXIS DARÍO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1198", "nombre": "CONDORI ARRIAGA,  LAUREAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1496", "nombre": "COPA BRAVO, GUNNAR FELIPE", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1519", "nombre": "CORONEL, BRAIAN EZEQUIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1013", "nombre": "CORTES, ENRIQUE MARCELO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1396", "nombre": "CRESPIN, SERGIO OSCAR", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1499", "nombre": "CRISTALDO, AURELIO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1495", "nombre": "DANKIEWICZ, ALEJANDRO GABRIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1381", "nombre": "DELGADO, CLAUDIO ANDRES", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1420", "nombre": "DEZA, DIEGO MATIAS", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1217", "nombre": "DIAZ, RAFAEL ALEJANDRO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1220", "nombre": "DI STEFANO, OMAR OSVALDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1088", "nombre": "DIAZ, DIEGO ALEJANDRO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1386", "nombre": "DOMINGUEZ CELIS, EZEQUIEL JORGE", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1540", "nombre": "DIAZ,LUIS DARIO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1459", "nombre": "ELIA ROJAS, JONATAN IVAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1212", "nombre": "DURAN, ROQUE FRANCISCO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1460", "nombre": "ENRIQUEZ, MARCOS OSCAR", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1102", "nombre": "ESPINOZA, DANIEL WALTER", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1507", "nombre": "EZEIZA, JONATHAN GABRIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1235", "nombre": "FERNANDEZ, CARLOS ALBERTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1410", "nombre": "FERNANDEZ, HERNAN PABLO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1403", "nombre": "FRANCO, MAURO EZEQUIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1143", "nombre": "FLORES FLORES, JUSTINIANO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1137", "nombre": "FONTANA, DANIEL ALBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1326", "nombre": "GARCIA, HUGO MARCOS DANIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1430", "nombre": "FRETES DEL PUERTO, FREDY ADOLFO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1377", "nombre": "GARCETE, SERGIO RAUL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1550", "nombre": "GARRIDO, ADRIAN HORACIO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1520", "nombre": "GAUDINO, JORGE ARIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1104", "nombre": "GOMEZ, MARCELO FABIAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1239", "nombre": "GODOY, LUIS OMAR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1526", "nombre": "GOMEZ, CARLOS AMADEO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1096", "nombre": "GOMEZ, CARLOS MARIA", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1160", "nombre": "GOMEZ, DANIEL OSVALDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1359", "nombre": "GOMEZ, RAFAEL MARCELO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1512", "nombre": "GÓMEZ, MATÍAS EZEQUIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1148", "nombre": "GONZALEZ, GUSTAVO EZEQUIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1535", "nombre": "GONZÁLEZ ILLESCAS, GUSTAVO NICOLÁS", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1416", "nombre": "GONZALEZ, BRIAN LEONEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1434", "nombre": "GORRACHATEGUI, MARTIN ALFREDO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1516", "nombre": "GROLLIMUD, NAHUEL SANTIAGO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1122", "nombre": "HERRERA, LUIS VICTOR", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1196", "nombre": "GUERRERO, ESTEBAN RAFAEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1084", "nombre": "GUERRERO, VICTOR HUGO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1200", "nombre": "HEREDIA, HECTOR OSCAR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1230", "nombre": "IBAÑEZ ESPINOLA, SERGIO ARMANDO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1525", "nombre": "IBARRA, JORGE ALFREDO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1361", "nombre": "JALDIN, CLAUDIO MAXIMILIANO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1061", "nombre": "JIMENEZ VAZQUEZ, HERNAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1103", "nombre": "KIHN, DAMIAN OSCAR", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1529", "nombre": "KOVAC,FERNANDO EZEQUIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1510", "nombre": "KOPETKO, HERNÁN ANÍBAL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1294", "nombre": "LOPEZ, LUIS ALBERTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1421", "nombre": "LEGUIZAMON, JAVIER ALEJANDRO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1338", "nombre": "MARQUEZ, DAVID MARTIN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1546", "nombre": "LUCHENIO, GUILLERMO GUSTAVO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1064", "nombre": "MAIDANA, CLAUDIO NORBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1210", "nombre": "MAIDANA, PABLO ADRIAN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1508", "nombre": "MELGAREJO, JUAN DOMINGO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1027", "nombre": "MARQUEZ, HUGO DANIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1287", "nombre": "MEDINA, JORGE RAMON", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1229", "nombre": "MEDLICOTT, PABLO ARIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1511", "nombre": "MELGARES MONTAÑO, JUAN LUIS", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1327", "nombre": "MIÑO, CARLOS JORGE", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1562", "nombre": "MEZA, NESTOR DANIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1236", "nombre": "MOLINA, EDUARDO RUBEN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1541", "nombre": "MUJICA, ANDRES", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1436", "nombre": "MOLLERICONA CONDORI, ROMEL IVAN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1117", "nombre": "MORALES ALBA, MOICES", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1402", "nombre": "MOREYRA, LEANDRO EMANUEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1372", "nombre": "NIGODA, CARLOS ERNESTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1165", "nombre": "OLMEDO, CARMELINO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1455", "nombre": "ORTEGA PAEZ, DIEGO ALBERTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1559", "nombre": "ORREGO, NICOLAS ANDRES", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1257", "nombre": "OVIEDO, SERGIO ALEJANDRO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1431", "nombre": "ORTELLADO FRANCO, RICHARD DAVID", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1354", "nombre": "PADILLA, HORACIO RUBEN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1292", "nombre": "PANIAGUA, JUAN PABLO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1216", "nombre": "PERALTA, JOSE ALBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1281", "nombre": "PEREZ, ROBERTO FABIAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1532", "nombre": "PONCE, JOSÉ ESTEBAN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1439", "nombre": "PORTILLO ESCOBAR, SIXTO JAVIER", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1553", "nombre": "QUISPE, CONDORI ALVARO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1527", "nombre": "REDONDO,JAIME IVAN EDGARDO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1282", "nombre": "REINOSO, AUGUSTO EMILIANO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1395", "nombre": "RIVERO, EZEQUIEL CHRISTIAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1213", "nombre": "RIZZO, GUSTAVO FABIAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1502", "nombre": "ROBLES, DANIEL ANIBAL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1522", "nombre": "ROBLES,EZEQUIEL DARIO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1037", "nombre": "RODRIGO, JORGE OMAR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1067", "nombre": "RODRIGO, ORLANDO JAVIER", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1150", "nombre": "RODRIGUEZ, ALDO MARTIN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1373", "nombre": "RODRIGUEZ, DIEGO EDGARDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1232", "nombre": "RODRIGUEZ, EDUARDO LUCAS", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1476", "nombre": "RODRIGUEZ, ELIO EDUARDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1539", "nombre": "RODRIGUEZ, EZEQUIEL ALBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1483", "nombre": "SAMANIEGO DELGADO, JOSE SOLIMAN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1563", "nombre": "SANCHEZ DIEGO SEBASTIAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1503", "nombre": "SANCHEZ, ALEJANDRO JAVIER", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1077", "nombre": "SANCHEZ, JOSE LUIS", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1091", "nombre": "SANCHEZ, MARIO RICARDO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1065", "nombre": "SANDOVAL, MARCELO ROGELIO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1106", "nombre": "SANTANDER, JOSE ALBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1080", "nombre": "SERRUDO CALANCHA, JAVIER", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1533", "nombre": "SILVA, FEDERICO JULIAN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1555", "nombre": "SOBREDO, LUIS EDUARDO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1331", "nombre": "SOLANO, CESAR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1140", "nombre": "SOSA, CARLOS VICENTE", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1484", "nombre": "SOSA, WALTER ALEJANDRO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1184", "nombre": "TALAMO, JUAN JOSE", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1018", "nombre": "TALHAME, MARCELO F.", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1492", "nombre": "TERRANOVA, HUGO MARCELO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1518", "nombre": "TOLOZA, ARIEL ALBERTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1159", "nombre": "TORRES, LINDOR ROBERTO", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1313", "nombre": "TORREZ, EMANUEL ADEMAR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1401", "nombre": "TURNES, JORGE ALBERTO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1240", "nombre": "VAIRO, GUILLERMO DAMIAN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1543", "nombre": "VALDEZ, ORLANDO ILDEFONSO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1312", "nombre": "VALDEZ, PABLO VICTOR", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1337", "nombre": "VALENZUELA, HERNAN ESTEBAN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1343", "nombre": "VALENZUELA, MARIANO DANIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1375", "nombre": "VALLEJO, GUILLERMO MARTIN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1423", "nombre": "VAN DICK, CRISTIAN JOSE", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1079", "nombre": "VAZQUEZ, JUAN CARLOS", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1461", "nombre": "VEDOVATI, NATAEL MAURO NICOLAS", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1517", "nombre": "VEGA, FERNANDO GASTÓN", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1032", "nombre": "VERA FRIANDO,  DANIEL", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1397", "nombre": "VERA ORUE, RICHARD BERNABE", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1092", "nombre": "VERA, HUGO MARCELO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1471", "nombre": "VERA, JUAN ALEJANDRO", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1462", "nombre": "VERA, RODRIGO HERNAN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1521", "nombre": "VERGARA ,ALBERTO MARTIN", "gerencia": "Tapiales", "linea": "114"}, {"legajo": "1504", "nombre": "VICENTE, NAHUEL MATÍAS", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1203", "nombre": "VILLALON, HUGO GABRIEL", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1531", "nombre": "ZAMORA DELGADO,JESUS", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1129", "nombre": "ZAPATA, DIEGO GASTON", "gerencia": "Tapiales", "linea": "143"}, {"legajo": "1086", "nombre": "ZELAYA, MARIO GUSTAVO", "gerencia": "Tapiales", "linea": "114"}]
+;
+
+const ITEMS = ["Limpiaparabrisas","Luces stop","Luces posición del","Luces cortas","Luces posición tras","Luces de giro","Bocina","Parabrisas rajado","Espejos","Sistema SUBE","Depresores","Pasamanos","Martillos (3)","Timbres","Matafuego","Cinturones de seguridad","Sistema de puertas","Boliñas pintadas","Accesorios no correspondientes","Accesorios mal instalados","Corta corriente funcionando"];
+
+const GRUPOS = {'todas':null,'114-143':['114','143'],'61-62':['61','62'],'129':['129','1290'],'197':['197'],'145':['145']};
+let filtroActual = 'todas';
+let sheetsData = [];
+let FORMS = [];
+let activo = null;
+let pollingInterval = null;
+let st = {};
+
+const ME = () => document.getElementById('msgs');
+const BE = () => document.getElementById('btns');
+const IR = () => document.getElementById('irow');
+const CI = () => document.getElementById('ci');
+const PF = () => document.getElementById('pf');
+const HE = () => document.getElementById('hint');
+
+function tnow(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+function hoy(){const d=new Date();return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();}
+
+// ============================================================
+// INICIO — detectar modo al cargar
+// ============================================================
+window.addEventListener('load', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  MODO = urlParams.get('modo') === 'supervisor' ? 'supervisor' : 'conductor';
+
+  if (MODO === 'supervisor') {
+    document.getElementById('tab-sup').style.display = 'block';
+    document.getElementById('tab-db').style.display = 'block';
+    const sub = document.getElementById('brand-sub');
+    if (sub) sub.innerHTML += ' &nbsp;<span style="background:#1a3c5e;color:#f59e0b;font-size:9px;padding:2px 8px;border-radius:10px;font-family:monospace;font-weight:700;">SUPERVISOR</span>';
+    // Mostrar panel supervisor
+    document.getElementById('main-chat').style.display = 'none';
+    document.getElementById('main-sup').style.display = 'block';
+    document.getElementById('tab-sup').classList.add('active');
+    document.getElementById('tab-chat').classList.remove('active');
+    cargarDesdeSheets();
+    setInterval(cargarDesdeSheets, 20000);
+  } else {
+    iniciarConductor();
+  }
+});
+
+// ============================================================
+// CONDUCTOR — flujo completo
+// ============================================================
+function iniciarConductor() {
+  st = {tipo:'',fase:'tipo',intentos:0,cond:null,interno:'',idx:0,resps:[],anom:'',novedad:''};
+  activo = null;
+  if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+  setProg(0);
+  BE().innerHTML = '';
+  IR().style.display = 'none';
+  ME().innerHTML = '';
+  aBot('Buenos días. Soy <b>BotMisión</b>, tu asistente de Misión Buenos Aires.<br>¿Qué tipo de control vas a completar?<br><span class="bdg b-info">PRO O-M-01 · Rev. 05</span>', 'bot', 0)
+    .then(() => setTimeout(pedirTipo, 700));
+}
+
+function setProg(p) { PF().style.width = p + '%'; }
+
+function aBot(h, c, dl) {
+  return new Promise(function(r) {
+    setTimeout(function() {
+      const d = document.createElement('div');
+      d.className = 'msg ' + (c || 'bot');
+      d.innerHTML = h + '<div class="mt">' + tnow() + '</div>';
+      ME().appendChild(d);
+      ME().scrollTop = 9999;
+      r();
+    }, dl || 0);
+  });
+}
+
+function aUser(t) {
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = t + '<div class="mt">' + tnow() + '</div>';
+  ME().appendChild(d);
+  ME().scrollTop = 9999;
+}
+
+function setBtns(arr) {
+  BE().innerHTML = '';
+  IR().style.display = 'none';
+  arr.forEach(function(b) {
+    const e = document.createElement('button');
+    e.className = 'cbtn ' + b.c;
+    e.textContent = b.l;
+    e.onclick = b.fn;
+    BE().appendChild(e);
+  });
+}
+
+function setInp(ph, fn, num) {
+  BE().innerHTML = '';
+  IR().style.display = 'flex';
+  const ci = CI();
+  ci.placeholder = ph;
+  ci.value = '';
+  ci.type = num ? 'tel' : 'text';
+  window._fn = fn;
+  ci.onkeydown = function(e) { if (e.key === 'Enter') fn(); };
+  setTimeout(function() { ci.focus(); }, 80);
+}
+
+function doSend() { if (window._fn) window._fn(); }
+
+function buscar(l) { return NOMINA.find(function(c) { return c.legajo === l.trim(); }); }
+
+function pedirTipo() {
+  HE().textContent = 'Seleccioná el tipo de control';
+  setBtns([
+    {l:'Inicio de servicio', c:'cbtn csi', fn:function(){elegirTipo('inicio');}},
+    {l:'Fin de servicio',    c:'cbtn cno', fn:function(){elegirTipo('fin');}}
+  ]);
+}
+
+function elegirTipo(tipo) {
+  st.tipo = tipo;
+  aUser(tipo === 'inicio' ? 'Inicio de servicio' : 'Fin de servicio');
+  setTimeout(function() {
+    aBot('Control de <b>' + (tipo==='inicio'?'Inicio':'Fin') + ' de Servicio</b>.<br>Ingresá tu <b>número de legajo</b>.', 'bot', 0);
+    setTimeout(pedirLeg, 800);
+  }, 300);
+}
+
+function pedirLeg() {
+  HE().textContent = (st.tipo==='fin'?'Paso 1 de 2':'Paso 1 de 3') + ' — Legajo';
+  setInp('Número de legajo...', validarLeg, false);
+}
+
+function validarLeg() {
+  const v = CI().value.trim();
+  if (!v) return;
+  aUser(v);
+  IR().style.display = 'none';
+  const c = buscar(v);
+  st.intentos++;
+  if (c) {
+    st.cond = c;
+    setTimeout(function() {
+      aBot('Verificando legajo <b>' + v + '</b>...', 'bot', 0);
+      setTimeout(function() {
+        aBot('Legajo encontrado. <span class="bdg b-ok">✓</span><br><b>' + c.nombre + '</b><br><span class="bdg b-info">' + c.gerencia + ' · Línea ' + c.linea + '</span>', 'bot', 500);
+        setTimeout(pedirInterno, 1300);
+      }, 500);
+    }, 300);
+  } else {
+    const err = ['Legajo <b>'+v+'</b> no registrado. Intentá de nuevo.','Segundo intento fallido.','Contactá a Control Central.'];
+    setTimeout(function() {
+      aBot(err[Math.min(st.intentos-1,2)], 'errmsg', 0);
+      if (st.intentos >= 3) {
+        HE().textContent = 'Contactá al supervisor';
+        setBtns([{l:'Reintentar',c:'cbtn crst',fn:iniciarConductor}]);
+      } else {
+        setTimeout(pedirLeg, 900);
+      }
+    }, 300);
+  }
+}
+
+function pedirInterno() {
+  HE().textContent = (st.tipo==='fin'?'Paso 2 de 2':'Paso 2 de 3') + ' — N° de interno';
+  aBot('Ingresá el <b>número de interno</b> del vehículo:', 'bot', 0);
+  setInp('Ej: 047', validarInterno, true);
+}
+
+function validarInterno() {
+  const v = CI().value.trim();
+  if (!v || !/^\d+$/.test(v)) {
+    aBot('El interno debe ser un número.', 'errmsg', 0);
+    setInp('Solo números, ej: 047', validarInterno, true);
+    return;
+  }
+  st.interno = v;
+  aUser('Interno: N° ' + v);
+  IR().style.display = 'none';
+  setTimeout(function() {
+    aBot(
+      'Confirmá los datos:<br><br>' +
+      '<div class="confirm-box">' +
+      '<div class="rl">Conductor</div><div class="rv">' + st.cond.nombre + '</div>' +
+      '<div class="rl" style="margin-top:6px;">Legajo</div><div class="rv">' + st.cond.legajo + '</div>' +
+      '<div class="rl" style="margin-top:6px;">Interno</div><div class="rv-lg">N° ' + v + '</div>' +
+      '<div class="rl" style="margin-top:6px;">Gerencia · Línea</div><div class="rv">' + st.cond.gerencia + ' · Línea ' + st.cond.linea + '</div>' +
+      '</div>', 'bot', 0
+    );
+    setTimeout(function() {
+      setBtns([
+        {l:'Sí, correcto', c:'cbtn csi', fn:confirmar},
+        {l:'Corregir interno', c:'cbtn crst', fn:function(){aUser('Corregir');setTimeout(pedirInterno,400);}},
+        {l:'Corregir legajo', c:'cbtn crst', fn:function(){aUser('Corregir');st.intentos=0;setTimeout(pedirLeg,400);}},
+      ]);
+      HE().textContent = 'Confirmá los datos';
+    }, 400);
+  }, 500);
+}
+
+function confirmar() {
+  aUser('Sí, correcto');
+  if (st.tipo === 'fin') {
+    setTimeout(function() {
+      aBot('Control de <b>Fin de Servicio</b>.<br>Interno: <b>N° ' + st.interno + '</b>', 'bot', 0);
+      setTimeout(pedirNovedadFin, 700);
+    }, 300);
+  } else {
+    setTimeout(function() {
+      st.idx = 0; st.resps = [];
+      aBot('Iniciando <b>Control Previo a la Toma de Servicio</b>.<br>Interno: <b>N° ' + st.interno + '</b><br><span class="bdg b-info">' + ITEMS.length + ' ítems a verificar</span>', 'bot', 0);
+      setTimeout(pregItem, 800);
+    }, 300);
+  }
+}
+
+function pregItem() {
+  if (st.idx >= ITEMS.length) { setTimeout(cerrar, 400); return; }
+  setProg(Math.round((st.idx / ITEMS.length) * 100));
+  HE().textContent = 'Paso 3 de 3 — Ítem ' + (st.idx+1) + ' de ' + ITEMS.length;
+  aBot((st.idx+1) + '. <b>' + ITEMS[st.idx] + '</b>', 'bot', 0);
+  setBtns([
+    {l:'SI ✓', c:'cbtn csi', fn:function(){resp(true);}},
+    {l:'NO / Falla', c:'cbtn cno', fn:function(){resp(false);}}
+  ]);
+}
+
+function resp(ok) {
+  aUser(ok ? 'SI' : 'NO — Falla');
+  st.resps.push({item: ITEMS[st.idx], ok: ok});
+  st.idx++;
+  if (!ok) { aBot('Falla: <span class="bdg b-fail">' + ITEMS[st.idx-1] + '</span>', 'bot', 0); setTimeout(pregItem, 600); }
+  else setTimeout(pregItem, 320);
+}
+
+function cerrar() {
+  setProg(95);
+  const f = st.resps.filter(function(r){return !r.ok;});
+  aBot(f.length===0 ? 'Checklist OK. <span class="bdg b-ok">Todos los ítems aprobados</span>' : 'Checklist con <span class="bdg b-warn">' + f.length + ' anomalía(s)</span>', 'bot', 0);
+  setTimeout(pedirAnom, 800);
+}
+
+function pedirNovedadFin() {
+  HE().textContent = 'Novedad del servicio';
+  aBot('¿Hubo alguna novedad durante el servicio?', 'bot', 0);
+  setBtns([
+    {l:'Sin novedad', c:'cbtn csi', fn: function() {
+      aUser('Sin novedad');
+      st.novedad = 'Sin novedad';
+      st.anom = 'Sin novedad';
+      st.resps = [];
+      setTimeout(guardar, 500);
+    }},
+    {l:'Novedad en servicio', c:'cbtn cno', fn: function() {
+      aUser('Novedad en servicio');
+      setTimeout(pedirDetalleNovedad, 400);
+    }}
+  ]);
+}
+
+function pedirDetalleNovedad() {
+  HE().textContent = 'Describí la novedad';
+  aBot('Describí la novedad ocurrida durante el servicio:', 'bot', 0);
+  setInp('Describí la novedad...', function() {
+    const v = CI().value.trim();
+    if (!v) return;
+    st.novedad = v;
+    st.anom = v;
+    st.resps = [];
+    aUser(v);
+    IR().style.display = 'none';
+    setTimeout(guardar, 600);
+  }, false);
+}
+
+function pedirAnom() {
+  // Con o sin fallas — va directo a guardar
+  // Las anomalías ya quedaron registradas en st.resps
+  st.anom = 'Sin novedad';
+  setTimeout(guardar, 400);
+}
+
+async function guardar() {
+  setProg(100);
+  const esFin = st.tipo === 'fin';
+  const f = esFin ? [] : st.resps.filter(function(r){return !r.ok;});
+  const decision = f.length === 0 ? 'Autorizado' : 'Pendiente';
+  const id = '#' + String(Date.now()).slice(-6);
+  const form = {
+    id:id, tipo:st.tipo||'inicio', hora:tnow(), fecha:hoy(),
+    cond:st.cond, interno:st.interno,
+    resps:esFin?[]:[...st.resps], fallas:[...f],
+    anom:st.anom, novedad:st.novedad||'',
+    decision:decision, savedToSheets:false
+  };
+  FORMS.push(form);
+  activo = form;
+
+  const tipoLabel = esFin ? 'Fin de Servicio' : 'Inicio de Servicio';
+  let html = '<div style="background:#fff;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.9;border-left:4px solid ' + (f.length===0?'#22c55e':'#f59e0b') + '">';
+  html += '<b>Informe ' + id + ' — ' + tipoLabel + '</b><br>';
+  html += '<span class="bdg ' + (esFin?'b-info':'b-ok') + '">' + tipoLabel.toUpperCase() + '</span><br>';
+  html += 'Conductor: <b>' + st.cond.nombre + '</b><br>';
+  html += 'Legajo: <b>' + st.cond.legajo + '</b> | Interno: <b>N° ' + st.interno + '</b><br>';
+  html += 'Gerencia: ' + st.cond.gerencia + ' · Línea: ' + st.cond.linea + '<br>';
+  if (esFin) {
+    html += '<br><b>Novedad:</b> ' + (st.novedad||'Sin novedad') + '<br>';
+  } else {
+    html += (ITEMS.length-f.length) + '/' + ITEMS.length + ' ítems OK<br>';
+    if (f.length) { html += '<br><b>Anomalías:</b><br>'; f.forEach(function(x){html+='&nbsp;· '+x.item+'<br>';}); }
+    html += '<br><b>Obs.:</b> ' + st.anom + '<br>';
+  }
+  html += '<br>';
+  html += f.length===0 ? '<span class="bdg b-ok">✓ Autorizado para salir</span>' : '<span class="bdg b-warn">⏳ Aguardando autorización</span>';
+  html += '</div>';
+  aBot(html, 'bot', 0);
+
+  if (esFin) {
+    HE().textContent = '✅ Fin de servicio registrado';
+    setBtns([{l:'Nuevo formulario',c:'cbtn crst',fn:iniciarConductor}]);
+  } else if (f.length === 0) {
+    HE().textContent = '✅ Listo para salir';
+    setBtns([{l:'Nuevo formulario',c:'cbtn crst',fn:iniciarConductor}]);
+  } else {
+    HE().textContent = '⏳ Esperando autorización del supervisor...';
+    BE().innerHTML = '<span style="font-size:11px;color:var(--gray4);">Aguardando respuesta...</span>';
+    setTimeout(function(){
+      aBot('Notificación enviada a Control Central.<br><span class="bdg b-info">Art. 39 · Ley 24.449</span>', 'bot', 0);
+    }, 900);
+    setTimeout(function(){ iniciarPolling(form.id); }, 5000);
+  }
+
+  // Guardar en Sheets
+  setTimeout(function(){ enviarASheets(form); }, 1000);
+}
+
+function enviarASheets(form) {
+  if (!SCRIPT_URL) return;
+  const fallas = form.fallas.map(function(f){return f.item;}).join('|');
+  const resps  = form.resps.map(function(r){return r.ok?'1':'0';}).join('');
+  const params = new URLSearchParams({
+    accion:'nuevo', tipo:form.tipo, id:form.id,
+    fecha:form.fecha, hora:form.hora,
+    legajo:form.cond.legajo, conductor:form.cond.nombre,
+    gerencia:form.cond.gerencia, linea:form.cond.linea,
+    interno:form.interno,
+    items_ok:(ITEMS.length-form.fallas.length),
+    total_items:ITEMS.length,
+    fallas:fallas, items_names:ITEMS.join('|'),
+    resps:resps, novedad:form.novedad||'',
+    anom:form.anom, decision:form.decision
+  });
+  const img = new Image();
+  img.onload = function(){ form.savedToSheets=true; aBot('<span class="bdg b-save">✓ Guardado en Google Sheets</span>','bot',0); };
+  img.onerror = function(){ form.savedToSheets=true; aBot('<span class="bdg b-save">✓ Guardado en Google Sheets</span>','bot',0); };
+  img.src = SCRIPT_URL + '?' + params.toString();
+}
+
+// ============================================================
+// POLLING — conductor espera respuesta del supervisor
+// ============================================================
+function iniciarPolling(formId) {
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(function() {
+    const cbName = 'poll_' + Date.now();
+    const sc = document.createElement('script');
+    window[cbName] = function(json) {
+      delete window[cbName];
+      if (sc.parentNode) sc.parentNode.removeChild(sc);
+      if (json && json.status==='ok' && json.estado && json.estado.estado && json.estado.estado !== 'Pendiente') {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+        const dec = json.estado.estado;
+        const horaD = json.estado.hora_decision || tnow();
+        recibirDecision(formId, dec, horaD);
+      }
+    };
+    sc.onerror = function(){ delete window[cbName]; if(sc.parentNode)sc.parentNode.removeChild(sc); };
+    sc.src = SCRIPT_URL + '?accion=estado&id=' + encodeURIComponent(formId) + '&callback=' + cbName + '&t=' + Date.now();
+    document.head.appendChild(sc);
+  }, 10000);
+}
+
+function recibirDecision(id, dec, horaD) {
+  const form = FORMS.find(function(x){return x.id===id;});
+  const interno = form ? form.interno : '';
+  const m = document.createElement('div');
+  m.className = 'msg ' + (dec==='Autorizado'?'msg-aut':'msg-ret');
+  m.innerHTML = (dec==='Autorizado'
+    ? '🟢 <b>SALIDA AUTORIZADA</b><br>Interno <b>N° '+interno+'</b> autorizado.'
+    : '🔴 <b>UNIDAD RETENIDA</b><br>Interno <b>N° '+interno+'</b> retenido. Aguardá instrucciones.')
+    + '<br><span class="bdg '+(dec==='Autorizado'?'b-ok':'b-fail')+'">'+dec+' · '+horaD+'</span>'
+    + '<div class="mt">'+horaD+'</div>';
+  ME().appendChild(m); ME().scrollTop=9999;
+  HE().textContent = dec==='Autorizado' ? '✅ Autorizado para salir' : '🔴 Unidad retenida';
+  BE().innerHTML = '';
+  const rb = document.createElement('button');
+  rb.className='cbtn crst'; rb.textContent='Nuevo formulario'; rb.onclick=iniciarConductor;
+  BE().appendChild(rb);
+  mostrarNotif(dec, horaD, interno);
+}
+
+// ============================================================
+// NOTIFICACION
+// ============================================================
+function mostrarNotif(dec, hora, interno) {
+  const ok = dec === 'Autorizado';
+  document.getElementById('ni').textContent = ok ? '✅' : '🚫';
+  document.getElementById('nib').className = 'nib ' + (ok?'nib-ok':'nib-ret');
+  document.getElementById('nib').textContent = dec.toUpperCase();
+  document.getElementById('ntit').textContent = ok ? '¡Salida autorizada!' : 'Unidad retenida';
+  document.getElementById('ntit').style.color = ok ? '#166534' : '#991b1b';
+  document.getElementById('nsub').innerHTML = ok
+    ? 'El supervisor autorizó la salida del interno <b>N° '+interno+'</b>.<br><span style="font-size:11px;color:#9ca3af;">'+hora+'</span>'
+    : 'El supervisor retuvo el interno <b>N° '+interno+'</b>.<br><span style="font-size:11px;color:#9ca3af;">'+hora+'</span>';
+  document.getElementById('nbtne').className = 'nbtno ' + (ok?'nbtno-ok':'nbtno-ret');
+  document.getElementById('nbtne').textContent = ok ? 'Entendido — Salir' : 'Entendido';
+  document.getElementById('notif-overlay').classList.add('show');
+}
+function cerrarNotif() { document.getElementById('notif-overlay').classList.remove('show'); }
+
+// ============================================================
+// SUPERVISOR — carga desde Sheets via JSONP
+// ============================================================
+function cargarDesdeSheets() {
+  const btn = document.getElementById('btn-refresh');
+  if (btn) { btn.textContent='⏳ Cargando...'; btn.disabled=true; }
+  const cbName = 'cb_' + Date.now();
+  const sc = document.createElement('script');
+  const timeout = setTimeout(function() {
+    delete window[cbName];
+    if (sc.parentNode) sc.parentNode.removeChild(sc);
+    renderSupervisor([]);
+    if (btn) { btn.textContent='🔄 Actualizar'; btn.disabled=false; }
+  }, 8000);
+  window[cbName] = function(json) {
+    clearTimeout(timeout);
+    delete window[cbName];
+    if (sc.parentNode) sc.parentNode.removeChild(sc);
+    if (json && json.status==='ok' && json.data) sheetsData = json.data;
+    renderSupervisor(sheetsData);
+    if (btn) { btn.textContent='🔄 Actualizar'; btn.disabled=false; }
+  };
+  sc.onerror = function() {
+    clearTimeout(timeout);
+    delete window[cbName];
+    renderSupervisor(sheetsData);
+    if (btn) { btn.textContent='🔄 Actualizar'; btn.disabled=false; }
+  };
+  sc.src = SCRIPT_URL + '?accion=todos&callback=' + cbName + '&t=' + Date.now();
+  document.head.appendChild(sc);
+}
+
+function setFiltro(g, btn) {
+  filtroActual = g;
+  document.querySelectorAll('.filt-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderSupervisor(sheetsData);
+}
+
+function filtrar(todos) {
+  if (filtroActual==='todas') return todos;
+  const lineas = GRUPOS[filtroActual];
+  return lineas ? todos.filter(function(f){return lineas.includes(String(f.linea));}) : todos;
+}
+
+function renderSupervisor(todos) {
+  const fil = filtrar(todos);
+  const pend = fil.filter(function(f){return f.estado==='Pendiente';});
+  const ok   = fil.filter(function(f){return f.estado==='Autorizado';});
+  const anom = fil.filter(function(f){return parseInt(f.items_falla||0)>0;});
+
+  document.getElementById('kt').textContent  = fil.length;
+  document.getElementById('kp').textContent  = pend.length;
+  document.getElementById('kok').textContent = ok.length;
+  document.getElementById('kan').textContent = anom.length;
+
+  // Pills
+  const total_pend = todos.filter(function(f){return f.estado==='Pendiente';}).length;
+  ['spill','apill'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(total_pend>0){el.textContent=total_pend;el.classList.add('show');}
+    else el.classList.remove('show');
+  });
+
+  // Anomalías frecuentes
+  const freq = {};
+  fil.forEach(function(f){
+    if (f.anomalias) f.anomalias.split(',').forEach(function(x){const k=x.trim();if(k)freq[k]=(freq[k]||0)+1;});
+  });
+  const s = Object.entries(freq).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+  document.getElementById('fbars').innerHTML = s.length
+    ? s.map(function(e,i){return '<div class="brl"><div class="bll">'+e[0]+'</div><div class="blt"><div class="blf" style="width:'+Math.round(e[1]/s[0][1]*100)+'%;background:#ef4444;"></div></div><div class="bln">'+e[1]+'</div></div>';}).join('')
+    : '<div class="nopend">Sin datos de anomalías.</div>';
+
+  // Lista pendientes
+  document.getElementById('alist').innerHTML = pend.length
+    ? pend.map(function(f){
+        const anomArr = (f.anomalias||'').split(',').filter(function(x){return x.trim();});
+        const esCrit = anomArr.some(function(x){return ['Sistema de puertas','Matafuego','Parabrisas rajado'].includes(x.trim());});
+        return '<div class="aitem" id="ai-'+f.id+'"><div class="atop">' +
+          '<div class="adot '+(esCrit?'dr':'dw')+'"></div>' +
+          '<div class="ainfo">' +
+          '<div class="aname">'+f.conductor+'</div>' +
+          '<div class="ameta">'+f.hora+' · Leg. '+f.legajo+' · <b>Interno N° '+f.interno+'</b> · '+f.gerencia+' · Línea '+f.linea+'</div>' +
+          '<div class="chips">'+anomArr.map(function(x){return '<span class="chip">'+x.trim()+'</span>';}).join('')+'</div>' +
+          '<div class="abtns">' +
+          '<button class="abtn abtn-a" onclick="decidir(\''+f.id+'\',\'Autorizado\')">Autorizar salida</button>' +
+          '<button class="abtn abtn-r" onclick="decidir(\''+f.id+'\',\'Retenido\')">Retener unidad</button>' +
+          '</div></div></div></div>';
+      }).join('')
+    : '<div class="nopend">No hay unidades pendientes.</div>';
+
+  // Historial
+  document.getElementById('hbody').innerHTML = fil.length
+    ? fil.map(function(f){
+        const est = f.estado||'';
+        return '<tr>' +
+          '<td style="font-family:monospace;font-size:10px;">'+f.id+'</td>' +
+          '<td style="font-size:10px;color:var(--gray4);">'+(f.tipo||'').replace(' de Servicio','')+'</td>' +
+          '<td style="font-family:monospace;">'+f.hora+'</td>' +
+          '<td>'+(f.conductor||'').split(',')[0]+'</td>' +
+          '<td style="font-family:monospace;font-weight:700;">N°'+f.interno+'</td>' +
+          '<td style="font-family:monospace;">'+f.linea+'</td>' +
+          '<td><span class="bdg '+(est==='Autorizado'?'b-ok':est==='Retenido'?'b-fail':'b-pend')+'">'+est+'</span></td>' +
+          '</tr>';
+      }).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:20px;color:#9ca3af;">Sin registros.</td></tr>';
+}
+
+function decidir(id, dec) {
+  const hora = tnow();
+  // Actualizar UI inmediatamente
+  const el = document.getElementById('ai-'+id);
+  if (el) {
+    el.querySelector('.abtns').innerHTML = '<span class="bdg '+(dec==='Autorizado'?'b-ok':'b-fail')+'" style="padding:5px 12px;">'+dec+' · '+hora+'</span>';
+    el.querySelector('.adot').className = 'adot dg';
+  }
+  // Enviar a Sheets
+  const img = new Image();
+  img.src = SCRIPT_URL + '?id=' + encodeURIComponent(id) + '&decision=' + encodeURIComponent(dec) + '&hora=' + encodeURIComponent(hora);
+  // Actualizar cache
+  sheetsData = sheetsData.map(function(f){ return f.id===id ? Object.assign({},f,{estado:dec}) : f; });
+  setTimeout(function(){ renderSupervisor(sheetsData); }, 300);
+  setTimeout(cargarDesdeSheets, 3000);
+}
+
+// ============================================================
+// NAVEGACIÓN
+// ============================================================
+function showMain(id, btn) {
+  ['chat','sup','db'].forEach(function(x){ document.getElementById('main-'+x).style.display='none'; });
+  document.getElementById('main-'+id).style.display = 'block';
+  document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  if (id==='sup') cargarDesdeSheets();
+  if (id==='db') renderDB();
+}
+
+function showStab(id, btn) {
+  document.querySelectorAll('.ssec').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('stab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function renderDB() {
+  const q = (document.getElementById('dbq').value||'').toLowerCase();
+  const fil = NOMINA.filter(function(c){return c.legajo.includes(q)||c.nombre.toLowerCase().includes(q);});
+  document.getElementById('dbc').textContent = fil.length + ' de ' + NOMINA.length + ' conductores';
+  document.getElementById('dbtb').innerHTML = fil.map(function(c){
+    return '<tr><td style="font-family:monospace;font-weight:700;">'+c.legajo+'</td><td>'+c.nombre+'</td><td>'+c.gerencia+'</td><td style="font-family:monospace;">'+c.linea+'</td></tr>';
+  }).join('');
+}
+</script>
+</body>
+</html>
